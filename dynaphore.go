@@ -48,9 +48,10 @@ type dynaphore struct {
 
 func NewDynaphore(max int) Dynaphore {
 	s := dynaphore{
-		lock:   make(chan struct{}),
-		unlock: make(chan struct{}, 1),
-		max:    make(chan int, 1),
+		lock:    make(chan struct{}),
+		unlock:  make(chan struct{}, 1),
+		max:     make(chan int, 1),
+		current: make(chan int),
 	}
 	s.max <- max
 
