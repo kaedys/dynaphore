@@ -9,6 +9,9 @@ type Dynaphore interface {
 	// SetMax can be called concurrently with other methods, even with itself.
 	SetMax(newMax int) Dynaphore
 
+	// Current returns the current number of active locks
+	Current() int
+
 	// Up attempts to acquire a lock.  If the current number of active locks is less than the set maximum, Up() will
 	// immediately return.  If not, Up() will block until a lock can be acquired.
 	Up() Dynaphore
@@ -37,9 +40,10 @@ type Dynaphore interface {
 type LockChan <-chan struct{}
 
 type dynaphore struct {
-	lock   chan struct{} // the dynaphore sends on this to gain a lock
-	unlock chan struct{} // the dynaphore sends on this go release a lock
-	max    chan int      // the dynaphore sends on this to indicate that the maximum has changed
+	lock    chan struct{} // the dynaphore sends on this to gain a lock
+	unlock  chan struct{} // the dynaphore sends on this go release a lock
+	max     chan int      // the dynaphore sends on this to indicate that the maximum has changed
+	current chan int      // the dynyaphore receives on this when it wants to know the current number of locks
 }
 
 func NewDynaphore(max int) Dynaphore {
@@ -58,6 +62,10 @@ func NewDynaphore(max int) Dynaphore {
 func (s *dynaphore) SetMax(newMax int) Dynaphore {
 	s.max <- newMax
 	return s
+}
+
+func (s *dynaphore) Current() int {
+	return <-s.current
 }
 
 func (s *dynaphore) Up() Dynaphore {
@@ -101,6 +109,7 @@ func (s *dynaphore) manager() {
 			if current > 0 { // this is to handle misbehaving users that call Down without having called Up first
 				current--
 			}
+		case s.current <- current: // respond to a Current() call
 		case max = <-s.max: //update max, then loop
 		}
 	}
