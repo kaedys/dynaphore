@@ -1,7 +1,7 @@
 # Dynaphore
-A dynamically-sized dynaphore library.  
+A dynamically-sized semaphore library.  
 
-Like a dynaphore, a dynaphore allows a resource to be accessed by a limited quantity of concurrent operations. 
+Like a semaphore, a dynaphore allows a resource to be accessed by a limited quantity of concurrent operations. 
 Example use cases:
   * No more than 100 concurrent database connections.
   * No more than 10 concurrent file writers.
